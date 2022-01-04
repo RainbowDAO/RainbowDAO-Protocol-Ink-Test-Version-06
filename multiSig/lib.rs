@@ -1,14 +1,13 @@
 #![cfg_attr(not(feature = "std"), no_std)]
 extern crate alloc;
-pub use self::multisign::{
-    Multisign,
+pub use self::multisig::{
+    Multisig,
 };
 use ink_lang as ink;
 
 #[ink::contract]
-mod multisign {
+mod multisig {
     use alloc::string::String;
-    //Defining a mutable array
     use ink_prelude::vec::Vec;
     use ink_prelude::collections::BTreeMap;
     use ink_storage::{
@@ -22,118 +21,162 @@ mod multisign {
         },
     };
 
-    //trade information
     #[derive(scale::Encode, scale::Decode, Clone, SpreadLayout, PackedLayout)]
     #[cfg_attr(
     feature = "std",
     derive(scale_info::TypeInfo, ink_storage::traits::StorageLayout)
     )]
-    pub struct Transaction{
-        to:AccountId,
-        amount:u128,
-        signature_count:i32,
+    #[derive(Debug)]
+    pub struct Transaction {
+        id:u64,
+        status: bool,
+        to: AccountId,
+        amount: u64,
+        signature_count: i32,
         signatures: BTreeMap<AccountId, i32>,
-
     }
 
-    
+
     #[ink(storage)]
-    pub struct Multisign {
-        owner:AccountId,
-        transaction_id:u64,  //information id
-        manager:Vec<AccountId>, //A collection of addresses for the multi-check management collection
-        min_sign_count:i32, //Minimum number of transaction signatures
-        transactions:StorageHashMap<u64,Transaction>, //transaction set information id->Transaction
+    pub struct Multisig {
+        owner: AccountId,
+        transaction_idx: u64,
+        manager: StorageHashMap<AccountId, i32>,
+        transactions: StorageHashMap<u64, Transaction>,
+        info: StorageHashMap<u64, AccountId>,
+        min_sign_count: i32,
     }
-    impl Multisign {
+
+
+
+    impl Multisig {
         #[ink(constructor)]
-        pub fn new (owner:AccountId,min_sign_count:i32) ->Self{
-            let mut manager:Vec<AccountId>=Vec::new();
-            manager.push(owner);
-            Self{
-                owner:Self::env().caller(),
-                transaction_id:0,
-                manager,
-                transactions:StorageHashMap::new(),
+        pub fn new(owners: Vec<AccountId>,min_sign_count: i32,) -> Self {
+            let mut map: StorageHashMap<AccountId, i32> = StorageHashMap::new();
+            for addr in &owners{
+                    map.insert(*addr,1);
+                }
+            Self {
+                owner: Self::env().caller(),
+                transaction_idx: 0,
+                manager: map,
+                transactions: StorageHashMap::new(),
+                info: StorageHashMap::new(),
                 min_sign_count,
             }
         }
-        ///Create a trading
+
         #[ink(message)]
-        pub fn creat_transfer(&mut self,to:AccountId,amount:u128)->bool{
-            self.caller_is_manager();
+        pub fn creat_transfer(&mut self,to: AccountId ,amount: u64) -> bool {
+            self.ensure_caller_is_manager();
             let from = self.env().caller();
-            self.transaction_id +=1;
-            assert_eq!(self.env().balance()>=amount,true);
-            self.transactions.insert(self.transaction_id,
+            assert_eq!(self.env().balance() >= amount.into(), true);
+            self.transactions.insert(self.transaction_idx,
                 Transaction{
+                    id:self.transaction_idx,
+                    status: false,
                     to,
                     amount,
-                    signature_count:0,
+                    signature_count: 0,
                     signatures: BTreeMap::new(),
                 }
             );
-            
+            self.transaction_idx += 1;
             true
-            
         }
 
-        ///Signature trading
         #[ink(message)]
         pub fn sign_transaction(&mut self, transaction_id: u64) -> bool {
-            self.caller_is_manager();
+            self.ensure_caller_is_manager();
             let from = self.env().caller();
-            //Obtain transaction information by transaction ID
             let mut t = self.transactions.get_mut(&transaction_id).unwrap();
-            //Check whether a signature is available
+            assert!(t.status == false, "out!");
             let if_sign = t.signatures.get(&from);
-            assert!(if_sign == None);
-            //1 indicates a signature.the administrator's address and signature are added to the signatures collection
+            assert!(if_sign == None, "out!");
             t.signatures.insert(from, 1);
             t.signature_count += 1;
             let addr = t.to;
             let num = t.amount;
-            //Determine the number of signatures and transfer the specified number of assets when the conditions are met
             if t.signature_count >= self.min_sign_count {
-                self.env().transfer(addr, num);
+                t.status = true;
+                self.env().transfer(addr, num.into());
             }
-
             true
         }
-        ///Obtain transaction information by transaction ID
+
+
         #[ink(message)]
         pub fn get_transaction(&self,trans_id: u64) -> Transaction {
             self.transactions.get(&trans_id).unwrap().clone()
         }
-        ///add admin
         #[ink(message)]
-        pub fn add_manager(&mut self,addr: AccountId) -> bool {
-            self.caller_is_owner();
-            self.manager.push(addr);
+        pub fn add_manage(&mut self,addr: AccountId) -> bool {
+            self.ensure_caller_is_owner();
+            self.manager.insert(addr, 1);
             true
         }
-        ///Removing an Administrator
         #[ink(message)]
-        pub fn remove_manager(&mut self,addr: AccountId) -> bool {
-            self.caller_is_owner(); 
-            
-            for i in self.manager{
-                ifself.manager.contains(&addr){
-                    self.manager.remove(i);
-                }
-            }    
-            true           
+        pub fn remove_manage(&mut self,addr: AccountId) -> bool {
+            self.ensure_caller_is_owner();
+            self.manager.insert(addr, 0);
+            true
         }
-        ///Is it the owner himself
-        fn caller_is_owner(&self) -> bool{
+        #[ink(message)]
+        pub fn get_manage_list(&self) -> Vec<AccountId> {
+            let mut manager_list = Vec::new();
+            let mut iter = self.manager.keys();
+            let mut role = iter.next();
+            while role.is_some() {
+                manager_list.push(role.unwrap().clone());
+                role = iter.next();
+            }
+            manager_list
+        }
+        #[ink(message)]
+        pub fn get_sign_list(&self) -> Vec<Transaction> {
+            let mut sign_list = Vec::new();
+            let mut iter = self.transactions.values();
+            let mut sign = iter.next();
+            while sign.is_some() {
+                sign_list.push(sign.unwrap().clone());
+                sign = iter.next();
+            }
+            sign_list
+        }
+        fn ensure_caller_is_owner(&self) -> bool{
             self.owner == self.env().caller()
         }
-        ///Is it the administrator
-        fn caller_is_manager(&self) -> bool {
-            let caller = self.env().caller();
-            self.manager.contains(&caller) || self.owner == caller
 
+        fn ensure_caller_is_manager(&self) -> bool {
+            let caller = self.env().caller();
+            self.manager.get(&caller) == Some(&1) || self.owner == caller
         }
 
+    }
+
+    #[cfg(test)]
+    mod tests {
+
+
+        /// Imports all the definitions from the outer scope so we can use them here.
+        use super::*;
+
+        /// Imports `ink_lang` so we can use `#[ink::test]`.
+        use ink_lang as ink;
+
+
+        #[ink::test]
+        fn init_works() {
+            let accounts =
+                ink_env::test::default_accounts::<ink_env::DefaultEnvironment>()
+                    .expect("Cannot get accounts");
+            let mut account_vec = Vec::new();
+            account_vec.push(accounts.alice);
+            account_vec.push(accounts.bob);
+            account_vec.push(accounts.eve);
+            let mut multisig = Multisig::new(account_vec,2);
+            //multisig.creat_transfer(accounts.bob,2);
+            assert!(multisig.add_manage(accounts.alice) == true);
+        }
     }
 }
