@@ -130,16 +130,37 @@ mod role_manage {
             privilege_vec
         }
     }
+    #[cfg(test)]
+    mod tests {
 
+        /// Imports all the definitions from the outer scope so we can use them here.
+        use super::*;
 
-    // #[cfg(test)]
-    // mod tests {
-    //     /// Imports all the definitions from the outer scope so we can use them here.
-    //     use super::*;
-    //
-    //     /// Imports `ink_lang` so we can use `#[ink::test]`.
-    //     use ink_lang as ink;
-    //
+        /// Imports `ink_lang` so we can use `#[ink::test]`.
+        use ink_lang as ink;
+
+        #[ink::test]
+        fn add_role_works() {
+            let accounts =
+                ink_env::test::default_accounts::<ink_env::DefaultEnvironment>()
+                    .expect("Cannot get accounts");
+            let mut role_manage = RoleManage::new();
+            role_manage.add_role(String::from("test"));
+            assert!(role_manage.query_role_by_index(0)== String::from("test"));
+
+        }
+        #[ink::test]
+        fn add_user_role_works() {
+            let accounts =
+                ink_env::test::default_accounts::<ink_env::DefaultEnvironment>()
+                    .expect("Cannot get accounts");
+            let mut role_manage = RoleManage::new();
+            role_manage.add_user_role(accounts.alice,String::from("test"));
+            assert!(role_manage.check_user_role(accounts.alice,String::from("test"))== true);
+
+        }
+    }
+   
     //     /// We test if the default constructor does its job.
     //     #[ink::test]
     //     fn default_works() {
@@ -155,5 +176,4 @@ mod role_manage {
     //         roleManage.flip();
     //         assert_eq!(roleManage.get(), true);
     //     }
-    // }
 }
