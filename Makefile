@@ -3,6 +3,7 @@ help:
 	develop help \n\
 	create :  create a new Contract .try command  [make create name=test]\n\
 	build  :  build an exit Contract. try command  [make build  name=test]\n\
+	test  :  test an exit Contract. try command  [make test  name=test]\n\
 	";
 
 create:
@@ -14,3 +15,5 @@ build:
 	mv target/ink/metadata.json target/ink/$(name).wasm target/ink/$(name).contract target  \
   	&& rm -r target/ink
 
+test:
+	cd $(name) && cargo +nightly  test -- --nocapture

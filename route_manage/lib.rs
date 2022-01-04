@@ -66,5 +66,37 @@ mod route_manage {
             true
         }
     }
+    #[cfg(test)]
+    mod tests {
+
+
+        /// Imports all the definitions from the outer scope so we can use them here.
+        use super::*;
+
+        /// Imports `ink_lang` so we can use `#[ink::test]`.
+        use ink_lang as ink;
+
+
+        #[ink::test]
+        fn add_route_works() {
+            let accounts =
+                ink_env::test::default_accounts::<ink_env::DefaultEnvironment>()
+                    .expect("Cannot get accounts");
+            let mut route_manage = RouteManage::new();
+            route_manage.add_route(String::from("test"),accounts.alice);
+            assert!(route_manage.query_route_by_name(String::from("test")) == accounts.alice);
+
+        }
+        #[ink::test]
+        fn change_route_works() {
+            let accounts =
+                ink_env::test::default_accounts::<ink_env::DefaultEnvironment>()
+                    .expect("Cannot get accounts");
+            let mut route_manage = RouteManage::new();
+            route_manage.add_route(String::from("test"),accounts.alice);
+            route_manage.change_route(String::from("test"),accounts.bob);
+            assert!(route_manage.query_route_by_name(String::from("test")) == accounts.bob);
+        }
+    }
 
 }
