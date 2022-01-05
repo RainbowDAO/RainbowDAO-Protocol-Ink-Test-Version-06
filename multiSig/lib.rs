@@ -1,12 +1,12 @@
 #![cfg_attr(not(feature = "std"), no_std)]
 extern crate alloc;
-pub use self::multisig::{
-    Multisig,
+pub use self::multiSig::{
+    MultiSig,
 };
 use ink_lang as ink;
 
 #[ink::contract]
-mod multisig {
+mod multiSig {
     use alloc::string::String;
     use ink_prelude::vec::Vec;
     use ink_prelude::collections::BTreeMap;
@@ -38,7 +38,7 @@ mod multisig {
 
 
     #[ink(storage)]
-    pub struct Multisig {
+    pub struct MultiSig {
         owner: AccountId,
         transaction_idx: u64,
         manager: StorageHashMap<AccountId, i32>,
@@ -49,7 +49,7 @@ mod multisig {
 
 
 
-    impl Multisig {
+    impl MultiSig {
         #[ink(constructor)]
         pub fn new(owners: Vec<AccountId>,min_sign_count: i32,) -> Self {
             let mut map: StorageHashMap<AccountId, i32> = StorageHashMap::new();
@@ -174,9 +174,9 @@ mod multisig {
             account_vec.push(accounts.alice);
             account_vec.push(accounts.bob);
             account_vec.push(accounts.eve);
-            let mut multisig = Multisig::new(account_vec,2);
-            //multisig.creat_transfer(accounts.bob,2);
-            assert!(multisig.add_manage(accounts.alice) == true);
+            let mut multiSig = MultiSig::new(account_vec,2);
+            //multiSig.creat_transfer(accounts.bob,2);
+            assert!(multiSig.add_manage(accounts.alice) == true);
         }
     }
 }
