@@ -1,5 +1,5 @@
 [package]
-name = "multiSig"
+name = "multisig_factory"
 version = "0.1.0"
 authors = ["[your_name] <[your_email]>"]
 edition = "2018"
@@ -15,14 +15,13 @@ erc20 = { version = "0.1.0", path = "../erc20", default-features = false, featur
 
 scale = { package = "parity-scale-codec", version = "2.0.1", default-features = false, features = ["derive"] }
 scale-info = { version = "1.0.0", default-features = false, features = ["derive"], optional = true }
-
+multiSig = { version = "0.1.0", path = "../multiSig", default-features = false, features = ["ink-as-dependency"] }
 [lib]
-name = "multiSig"
+name = "multisig_factory"
 path = "lib.rs"
 crate-type = [
 	# Used for normal contract Wasm blobs.
 	"cdylib",
-    "rlib",
 ]
 
 [features]
@@ -34,6 +33,7 @@ std = [
     "ink_primitives/std",
     "scale/std",
     "scale-info/std",
+    "multiSig/std",
 ]
 ink-as-dependency = []
 [profile.release]
