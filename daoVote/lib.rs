@@ -19,18 +19,18 @@ mod daoVote {
         }
     };
 
-    #[derive(scale::Encode, scale::Decode, Clone, SpreadLayout, PackedLayout)]
-    #[cfg_attr(
-    feature = "std",
-    derive(scale_info::TypeInfo, ink_storage::traits::StorageLayout)
-    )]
-    pub struct VoteInfo{
-        name:String,
-        number:u128,//voter turnout
-        vote:u128,//Number of votes cast
+    // #[derive(scale::Encode, scale::Decode, Clone, SpreadLayout, PackedLayout)]
+    // #[cfg_attr(
+    // feature = "std",
+    // derive(scale_info::TypeInfo, ink_storage::traits::StorageLayout)
+    // )]
+    // pub struct VoteInfo{
+    //     name:String,
+    //     number:u128,//voter turnout
+    //     vote:u128,//Number of votes cast
 
 
-    }
+    // }
   
     #[ink(storage)]
     pub struct DaoVote {
@@ -126,34 +126,15 @@ mod daoVote {
             }
             
         }
-        
-        /// Unit tests in Rust are normally defined within such a `#[cfg(test)]`
-         /// module and test functions are marked with a `#[test]` attribute.
-         /// The below code is technically just normal Rust code.
-         #[cfg(test)]
-         mod tests {
-         /// Imports all the definitions from the outer scope so we can use them here.
-         use super::*;
 
-         /// Imports `ink_lang` so we can use `#[ink::test]`.
-         use ink_lang as ink;
-
-         /// We test if the default constructor does its job.
-         #[ink::test]
-         fn default_works() {
-             let daoVote = DaoVote::default();
-             assert_eq!(daoVote.get(), false);
-         }
-
-         /// We test a simple use case of our contract.
-         #[ink::test]
-         fn it_works() {
-             let mut daoVote = DaoVote::new(false);
-             assert_eq!(daoVote.get(), false);
-             daoVote.flip();
-             assert_eq!(daoVote.get(), true);
-        }
-
+        // #[ink(message)]
+        // pub fn select_vote_info(&self)->VoteInfo{
+        //     VoteInfo {
+        //         name:self.name.clone(),
+        //         number:self.index,
+        //         vote:self.vote,
+        //     } 
+        // }
 
     }
 }

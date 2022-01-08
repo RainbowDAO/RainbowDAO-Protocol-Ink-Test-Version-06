@@ -1,24 +1,44 @@
 #![cfg_attr(not(feature = "std"), no_std)]
 
+extern crate alloc;
 use ink_lang as ink;
+
+pub use self::dao_vault::{
+    DaoVault,
+};
 
 #[ink::contract]
 mod daoVault {
+
+    use alloc::string::String;
+    use alloc::vec::Vec;
+    use erc20::Erc20;
+    use ink_storage::{
+        collections::HashMap as StorageHashMap,
+        traits::{PackedLayout,SpreadLayout},
+    };
 
     /// Defines the storage of your contract.
     /// Add new fields to the below struct in order
     /// to add new static storage fields to your contract.
     #[ink(storage)]
     pub struct DaoVault {
-        /// Stores a single `bool` value on the storage.
-        value: bool,
+        vault_manager:AccountId,
+        amount_of_user:u64,
+        allow_tokens:StorageHashMap<String,AccountId>,
+        in_out_tokens:StorageHashMap<(AccountId,String), u64>,
     }
 
     impl DaoVault {
         /// Constructor that initializes the `bool` value to the given `init_value`.
         #[ink(constructor)]
-        pub fn new(init_value: bool) -> Self {
-            Self { value: init_value }
+        pub fn new(owner:AccountId,) -> Self {
+            Self {
+                vault_manager :owner,
+                amount_of_user:0,
+                allow_tokens:StorageHashMap::default(),
+                in_out_tokens:StorageHashMap::default(),
+             }
         }
 
         /// Constructor that initializes the `bool` value to `false`.
