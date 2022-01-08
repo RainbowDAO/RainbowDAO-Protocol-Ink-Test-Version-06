@@ -14,13 +14,14 @@ ink_lang = { version = "3.0.0-rc5", path = "../ink/crates/lang", default-feature
 
 scale = { package = "parity-scale-codec", version = "2.0.1", default-features = false, features = ["derive"] }
 scale-info = { version = "1", default-features = false, features = ["derive"], optional = true }
-
+erc20 = {version = "0.1.0", path = "../erc20",  default-features = false, features = ["ink-as-dependency"]}
 [lib]
 name = "daoVault"
 path = "lib.rs"
 crate-type = [
 	# Used for normal contract Wasm blobs.
 	"cdylib",
+    "rlib",
 ]
 
 [features]
@@ -32,5 +33,8 @@ std = [
     "ink_primitives/std",
     "scale/std",
     "scale-info/std",
+    "erc20/std",
 ]
 ink-as-dependency = []
+[profile.release]
+overflow-checks = false
