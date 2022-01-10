@@ -50,7 +50,7 @@ mod daoVault {
         }
 
         #[ink(message)]
-        pub fn deposit_token(& mut self, token_name:String,token_address1:AccountId,amount1:u64) -> bool {
+        pub fn deposit(& mut self, token_name:String,token_address1:AccountId,amount1:u64) -> bool {
             assert_eq!(self.allow_tokens.get(&token_name) == Some(&token_address1),true);
             
             let caller = self.env().caller();
@@ -64,7 +64,22 @@ mod daoVault {
             });
             true
         }
-
+        #[ink(message)]
+        pub fn withdrawer(&mut self, token_name:String, token_address1:AccountId, amount1:u64) -> bool{
+            assert_eq!(self.allow_tokens.get(&token_name.clone()) == Some(&token_address1) , true);
+            let caller = self.env().caller();
+            let vault_addr = self.env().account_id();
+            
+           self.amount_of_user -= amount1;
+            self.in_out_tokens.insert((caller,token_name.clone()), self.amount_of_user);
+            
+            self.env().emit_event(WithdrawTokenEvent{
+                token_address:token_address1,
+                withdrawer:caller,
+                amount:amount1,
+            });
+            true
+        }
         /// Simply returns the current value of our `bool`.
         #[ink(message)]
         pub fn get(&self) -> bool {
