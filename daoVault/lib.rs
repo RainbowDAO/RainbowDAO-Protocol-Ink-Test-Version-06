@@ -49,12 +49,20 @@ mod daoVault {
             Self::new(Default::default())
         }
 
-        /// A message that can be called on instantiated contracts.
-        /// This one flips the value of the stored `bool` from `true`
-        /// to `false` and vice versa.
         #[ink(message)]
-        pub fn flip(&mut self) {
-            self.value = !self.value;
+        pub fn deposit_token(& mut self, token_name:String,token_address1:AccountId,amount1:u64) -> bool {
+            assert_eq!(self.allow_tokens.get(&token_name) == Some(&token_address1),true);
+            
+            let caller = self.env().caller();
+
+            self.in_out_tokens.insert((caller,token_name), self.amount_of_user);
+            
+            self.env().emit_event(DepositTokenEvent{
+                token_address:token_address1,
+                depositer:caller,
+                amount:amount1,
+            });
+            true
         }
 
         /// Simply returns the current value of our `bool`.
